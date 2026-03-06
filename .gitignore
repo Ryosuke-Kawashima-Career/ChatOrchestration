@@ -31,3 +31,8 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Next.js ###
+.next/
+node_modules/
+.env*.local
