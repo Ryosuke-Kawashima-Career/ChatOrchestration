@@ -1,5 +1,4 @@
 import { Client } from "@notionhq/client";
-import type { DataSourceObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 
 const notion = new Client({ auth: process.env.NOTION_API_KEY });
 
@@ -9,16 +8,15 @@ export interface NotionDatabase {
 }
 
 export async function listDatabases(): Promise<NotionDatabase[]> {
-  const res = await notion.search({
-    filter: { value: "data_source", property: "object" },
-    sort: { direction: "descending", timestamp: "last_edited_time" },
-  });
-  return res.results
-    .filter((r): r is DataSourceObjectResponse => r.object === "data_source")
-    .map((ds) => ({
-      id: ds.id,
-      title: ds.title[0]?.plain_text ?? "Untitled",
-    }));
+  const databaseId = process.env.NOTION_DATABASE_ID || "";
+  if (!databaseId) return [];
+
+  const db = await notion.databases.retrieve({ database_id: databaseId });
+  const title = "title" in db
+    ? db.title.map((t) => t.plain_text).join("")
+    : databaseId;
+
+  return [{ id: db.id, title }];
 }
 
 export interface SaveData {
@@ -49,7 +47,7 @@ function contentBlocks(text: string) {
 
 export async function savePage(data: SaveData): Promise<void> {
   await notion.pages.create({
-    parent: { data_source_id: data.databaseId },
+    parent: { database_id: data.databaseId },
     properties: {
       title: {
         title: [{ text: { content: data.prompt.slice(0, 2000) } }],

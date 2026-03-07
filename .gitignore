@@ -6,6 +6,8 @@ out/
 
 ### AI Agent ###
 .claude
+./docs/errors
+./docs/examples
 
 ### Eclipse ###
 .apt_generated

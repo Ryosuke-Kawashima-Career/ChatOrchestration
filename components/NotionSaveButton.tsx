@@ -26,6 +26,7 @@ export default function NotionSaveButton({ prompt, provider, model, content, tim
     setLoading(true);
     try {
       const res = await fetch("/api/notion/databases");
+      if (!res.ok) throw new Error("Failed to fetch databases");
       const data: NotionDatabase[] = await res.json();
       setDatabases(data);
       if (data.length > 0) setSelectedId(data[0].id);
