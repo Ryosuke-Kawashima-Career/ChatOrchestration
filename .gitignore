@@ -8,6 +8,8 @@ out/
 .claude
 ./docs/errors
 ./docs/examples
+.agent
+.gemini
 
 ### Eclipse ###
 .apt_generated
