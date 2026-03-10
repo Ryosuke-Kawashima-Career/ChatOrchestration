@@ -28,20 +28,60 @@ export interface SaveData {
   timestamp: string;
 }
 
-/** Splits text into ≤2000-char chunks as Notion paragraph blocks */
-function contentBlocks(text: string) {
-  const CHUNK = 2000;
-  const sliced = text.slice(0, 20000); // cap at 20k chars (~10 blocks)
-  const blocks = [];
-  for (let i = 0; i < sliced.length; i += CHUNK) {
+type NotionBlock =
+  | { object: "block"; type: "heading_1"; heading_1: { rich_text: [{ type: "text"; text: { content: string } }] } }
+  | { object: "block"; type: "heading_2"; heading_2: { rich_text: [{ type: "text"; text: { content: string } }] } }
+  | { object: "block"; type: "heading_3"; heading_3: { rich_text: [{ type: "text"; text: { content: string } }] } }
+  | { object: "block"; type: "paragraph"; paragraph: { rich_text: [{ type: "text"; text: { content: string } }] } };
+
+function headingBlock(level: 1 | 2 | 3, text: string): NotionBlock {
+  const type = `heading_${level}` as "heading_1" | "heading_2" | "heading_3";
+  return { object: "block", type, [type]: { rich_text: [{ type: "text", text: { content: text.slice(0, 2000) } }] } } as NotionBlock;
+}
+
+/** Flushes accumulated paragraph lines into ≤2000-char paragraph blocks. */
+function paragraphBlocks(lines: string[]): NotionBlock[] {
+  const text = lines.join("\n").trim();
+  if (!text) return [];
+  const blocks: NotionBlock[] = [];
+  for (let i = 0; i < text.length; i += 2000) {
     blocks.push({
-      object: "block" as const,
-      type: "paragraph" as const,
-      paragraph: {
-        rich_text: [{ type: "text" as const, text: { content: sliced.slice(i, i + CHUNK) } }],
-      },
+      object: "block",
+      type: "paragraph",
+      paragraph: { rich_text: [{ type: "text", text: { content: text.slice(i, i + 2000) } }] },
     });
   }
+  return blocks;
+}
+
+/**
+ * Converts a markdown string into Notion blocks, mapping:
+ *   # …   → heading_1
+ *   ## …  → heading_2
+ *   ### … → heading_3
+ *   everything else → paragraph (chunked at 2000 chars)
+ */
+function contentBlocks(text: string): NotionBlock[] {
+  const blocks: NotionBlock[] = [];
+  const buf: string[] = []; // pending paragraph lines
+
+  for (const line of text.slice(0, 20000).split("\n")) {
+    const h3 = line.match(/^### (.+)/);
+    const h2 = line.match(/^## (.+)/);
+    const h1 = line.match(/^# (.+)/);
+
+    if (h3 || h2 || h1) {
+      blocks.push(...paragraphBlocks(buf));
+      buf.length = 0;
+      if (h3) blocks.push(headingBlock(3, h3[1]));
+      else if (h2) blocks.push(headingBlock(2, h2[1]));
+      else if (h1) blocks.push(headingBlock(1, h1![1]));
+    } else {
+      buf.push(line);
+    }
+  }
+
+  blocks.push(...paragraphBlocks(buf));
   return blocks;
 }
 
