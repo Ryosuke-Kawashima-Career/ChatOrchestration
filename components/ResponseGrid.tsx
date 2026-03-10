@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import ResponsePanel from "./ResponsePanel";
 import type { LLMResponse, LLMProvider } from "@/types";
 
@@ -14,18 +11,11 @@ interface Props {
   responses: LLMResponse[];
   prompt?: string;
   timestamp?: Date;
+  collapsed: Record<LLMProvider, boolean>;
+  onToggleCollapse: (provider: LLMProvider) => void;
 }
 
-export default function ResponseGrid({ responses, prompt, timestamp }: Props) {
-  const [collapsed, setCollapsed] = useState<Record<LLMProvider, boolean>>({
-    openai: false,
-    google: false,
-    anthropic: false,
-  });
-
-  const toggle = (provider: LLMProvider) =>
-    setCollapsed((prev) => ({ ...prev, [provider]: !prev[provider] }));
-
+export default function ResponseGrid({ responses, prompt, timestamp, collapsed, onToggleCollapse }: Props) {
   return (
     <div className="flex flex-row gap-4 items-start">
       {PROVIDERS.map(({ provider, model }) => (
@@ -40,7 +30,7 @@ export default function ResponseGrid({ responses, prompt, timestamp }: Props) {
             prompt={prompt}
             timestamp={timestamp}
             collapsed={collapsed[provider]}
-            onToggleCollapse={() => toggle(provider)}
+            onToggleCollapse={() => onToggleCollapse(provider)}
           />
         </div>
       ))}
