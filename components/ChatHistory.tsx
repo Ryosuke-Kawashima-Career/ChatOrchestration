@@ -2,13 +2,15 @@
 
 import { useEffect, useRef } from "react";
 import ResponseGrid from "./ResponseGrid";
-import type { ChatMessage } from "@/types";
+import type { ChatMessage, LLMProvider } from "@/types";
 
 interface Props {
   messages: ChatMessage[];
+  collapsed: Record<LLMProvider, boolean>;
+  onToggleCollapse: (provider: LLMProvider) => void;
 }
 
-export default function ChatHistory({ messages }: Props) {
+export default function ChatHistory({ messages, collapsed, onToggleCollapse }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export default function ChatHistory({ messages }: Props) {
             </div>
           </div>
           {/* Response grid */}
-          <ResponseGrid responses={msg.responses} prompt={msg.prompt} timestamp={msg.timestamp} />
+          <ResponseGrid responses={msg.responses} prompt={msg.prompt} timestamp={msg.timestamp} collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
         </div>
       ))}
       <div ref={bottomRef} />

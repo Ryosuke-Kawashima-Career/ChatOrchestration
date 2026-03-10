@@ -19,6 +19,13 @@ export default function Home() {
   const [activeResponses, setActiveResponses] = useState<LLMResponse[]>([]);
   const [activePrompt, setActivePrompt] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [collapsed, setCollapsed] = useState<Record<LLMProvider, boolean>>({
+    openai: false,
+    google: false,
+    anthropic: false,
+  });
+  const toggleCollapsed = (provider: LLMProvider) =>
+    setCollapsed((prev) => ({ ...prev, [provider]: !prev[provider] }));
   const accRef = useRef<Record<LLMProvider, string>>({
     openai: "",
     google: "",
@@ -173,7 +180,7 @@ export default function Home() {
               </div>
             )}
 
-            <ChatHistory messages={messages} />
+            <ChatHistory messages={messages} collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
 
             {isStreaming && (
               <div className="space-y-4">
@@ -183,7 +190,7 @@ export default function Home() {
                     <p className="text-sm text-white">{activePrompt}</p>
                   </div>
                 </div>
-                <ResponseGrid responses={activeResponses} />
+                <ResponseGrid responses={activeResponses} collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
               </div>
             )}
           </div>

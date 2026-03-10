@@ -6,7 +6,7 @@ Example code of using Notion API
 
 The code shows how to make a page on Notion using API
 
-# Implementaion
+## Implementation
 
 ```typescript
 import { Client } from "@notionhq/client";
